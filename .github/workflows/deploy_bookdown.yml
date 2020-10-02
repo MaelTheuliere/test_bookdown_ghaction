@@ -33,11 +33,11 @@ jobs:
           if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
           renv::restore()
       - name: Render Book
-          run: Rscript -e 'bookdown::render_book("index.Rmd")'
-        - uses: actions/upload-artifact@v1
-          with:
-            name: _book
-            path: _book/
+        run: Rscript -e 'bookdown::render_book("index.Rmd")'
+      - uses: actions/upload-artifact@v1
+        with:
+          name: _book
+          path: _book/
   
 # Need to first create an empty gh-pages branch
 # see https://pkgdown.r-lib.org/reference/deploy_site_github.html
