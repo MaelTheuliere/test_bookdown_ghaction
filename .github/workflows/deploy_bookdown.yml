@@ -15,25 +15,40 @@ jobs:
     name: Render-Book
     runs-on: macOS-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: r-lib/actions/setup-r@v1
-      - uses: r-lib/actions/setup-pandoc@v1
-      - name: Install rmarkdown
-        run: Rscript -e 'install.packages(c("rmarkdown","bookdown"))'
-      - name: Cache packages
-      - uses: actions/cache@v2
-        with:
-          path: ~/Library/Application Support/renv
-          key: ${{ runner.os }}-renv-${{ hashFiles('**/renv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-renv-
-      - name: Restore packages
-        shell: Rscript {0}
+
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@master
+
+      - name: Install pandoc and pandoc citeproc
         run: |
-          if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
-          renv::restore()
-      - name: Render Book
-        run: Rscript -e 'bookdown::render_book("index.Rmd")'
+          brew install pandoc
+          brew install pandoc-citeproc
+
+      - name: Cache Renv packages
+        uses: actions/cache@v2
+        with:
+          path: $HOME/.local/share/renv
+          key: r-${{ hashFiles('renv.lock') }}
+          restore-keys: r-
+
+      - name: Cache bookdown results
+        uses: actions/cache@v2
+        with:
+          path: _bookdown_files
+          key: bookdown-${{ hashFiles('**/*Rmd') }}
+          restore-keys: bookdown-
+
+      - name: Install packages
+        run: |
+          R -e 'install.packages("renv")'
+          R -e 'renv::restore()'
+
+      - name: Build site
+        run: Rscript -e 'bookdown::render_book("index.Rmd", quiet = TRUE)'
+        
       - uses: actions/upload-artifact@v1
         with:
           name: _book
